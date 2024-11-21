@@ -3,42 +3,42 @@
 load test_helper
 
 setup() {
-  mkdir -p "$NODENV_TEST_DIR"
-  cd "$NODENV_TEST_DIR"
+  mkdir -p "$HUGOENV_TEST_DIR"
+  cd "$HUGOENV_TEST_DIR"
 }
 
 @test "reports global file even if it doesn't exist" {
-  assert [ ! -e "${NODENV_ROOT}/version" ]
-  run nodenv-version-origin
+  assert [ ! -e "${HUGOENV_ROOT}/version" ]
+  run hugoenv-version-origin
   assert_success
-  assert_output "${NODENV_ROOT}/version"
+  assert_output "${HUGOENV_ROOT}/version"
 }
 
 @test "detects global file" {
-  mkdir -p "$NODENV_ROOT"
-  touch "${NODENV_ROOT}/version"
-  run nodenv-version-origin
+  mkdir -p "$HUGOENV_ROOT"
+  touch "${HUGOENV_ROOT}/version"
+  run hugoenv-version-origin
   assert_success
-  assert_output "${NODENV_ROOT}/version"
+  assert_output "${HUGOENV_ROOT}/version"
 }
 
-@test "detects NODENV_VERSION" {
-  NODENV_VERSION=1 run nodenv-version-origin
+@test "detects HUGOENV_VERSION" {
+  HUGOENV_VERSION=1 run hugoenv-version-origin
   assert_success
-  assert_output "NODENV_VERSION environment variable"
+  assert_output "HUGOENV_VERSION environment variable"
 }
 
 @test "detects local file" {
   echo "system" > .node-version
-  run nodenv-version-origin
+  run hugoenv-version-origin
   assert_success
   assert_output "${PWD}/.node-version"
 }
 
 @test "reports from hook" {
-  create_hook version-origin test.bash <<<"NODENV_VERSION_ORIGIN=plugin"
+  create_hook version-origin test.bash <<<"HUGOENV_VERSION_ORIGIN=plugin"
 
-  NODENV_VERSION=1 run nodenv-version-origin
+  HUGOENV_VERSION=1 run hugoenv-version-origin
   assert_success
   assert_output "plugin"
 }
@@ -49,14 +49,14 @@ hellos=(\$(printf "hello\\tugly world\\nagain"))
 echo HELLO="\$(printf ":%s" "\${hellos[@]}")"
 SH
 
-  export NODENV_VERSION=system
-  IFS=$' \t\n' run nodenv-version-origin env
+  export HUGOENV_VERSION=system
+  IFS=$' \t\n' run hugoenv-version-origin env
   assert_success
   assert_line "HELLO=:hello:ugly:world:again"
 }
 
-@test "doesn't inherit NODENV_VERSION_ORIGIN from environment" {
-  NODENV_VERSION_ORIGIN=ignored run nodenv-version-origin
+@test "doesn't inherit HUGOENV_VERSION_ORIGIN from environment" {
+  HUGOENV_VERSION_ORIGIN=ignored run hugoenv-version-origin
   assert_success
-  assert_output "${NODENV_ROOT}/version"
+  assert_output "${HUGOENV_ROOT}/version"
 }

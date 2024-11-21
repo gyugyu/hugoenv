@@ -2,7 +2,7 @@
 #
 # Summary: Display help for a command
 #
-# Usage: nodenv help [--usage] COMMAND
+# Usage: hugoenv help [--usage] COMMAND
 #
 # Parses and displays help contents from a command's source file.
 #
@@ -13,17 +13,17 @@
 # documentation.
 
 set -e
-[ -n "$NODENV_DEBUG" ] && set -x
+[ -n "$HUGOENV_DEBUG" ] && set -x
 
-# Provide nodenv completions
+# Provide hugoenv completions
 if [ "$1" = "--complete" ]; then
   echo --usage
-  exec nodenv-commands
+  exec hugoenv-commands
 fi
 
 command_path() {
   local command="$1"
-  command -v nodenv-"$command" || command -v nodenv-sh-"$command" || true
+  command -v hugoenv-"$command" || command -v hugoenv-sh-"$command" || true
 }
 
 extract_initial_comment_block() {
@@ -45,7 +45,7 @@ collect_documentation() {
   local awk
   awk="$(type -p gawk awk 2>/dev/null | head -n1)"
   if [ -z "$awk" ]; then
-    echo "nodenv: cannot find awk" >&2
+    echo "hugoenv: cannot find awk" >&2
     return 1
   fi
 
@@ -127,7 +127,7 @@ print_help() {
     if [ -n "$usage" ]; then
       echo "$usage"
     else
-      echo "Usage: nodenv ${command}"
+      echo "Usage: hugoenv ${command}"
     fi
     if [ -n "$help" ]; then
       echo
@@ -153,15 +153,15 @@ if [ "$1" = "--usage" ]; then
   shift
 fi
 
-if [ -z "$1" ] || [ "$1" == "nodenv" ]; then
-  echo "Usage: nodenv <command> [<args>]"
+if [ -z "$1" ] || [ "$1" == "hugoenv" ]; then
+  echo "Usage: hugoenv <command> [<args>]"
   [ -z "$usage" ] || exit
   echo
-  echo "Some useful nodenv commands are:"
+  echo "Some useful hugoenv commands are:"
   print_summaries commands local global shell install uninstall rehash version versions which whence
   echo
-  echo "See \`nodenv help <command>' for information on a specific command."
-  echo "For full documentation, see: https://github.com/nodenv/nodenv#readme"
+  echo "See \`hugoenv help <command>' for information on a specific command."
+  echo "For full documentation, see: https://github.com/hugoenv/hugoenv#readme"
 else
   command="$1"
   if [ -n "$(command_path "$command")" ]; then
@@ -171,7 +171,7 @@ else
       print_help "$command"
     fi
   else
-    echo "nodenv: no such command \`$command'" >&2
+    echo "hugoenv: no such command \`$command'" >&2
     exit 1
   fi
 fi

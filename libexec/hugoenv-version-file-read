@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-# Usage: nodenv version-file-read <file>
+# Usage: hugoenv version-file-read <file>
 set -e
-[ -n "$NODENV_DEBUG" ] && set -x
+[ -n "$HUGOENV_DEBUG" ] && set -x
 
 VERSION_FILE="$1"
 
@@ -11,7 +11,7 @@ if [ -s "$VERSION_FILE" ]; then
   read -n 1024 -d "" -r version _ <"$VERSION_FILE" || :
 
   if [[ $version == *..* ]]; then
-    echo "nodenv: invalid version in \`$VERSION_FILE'" >&2
+    echo "hugoenv: invalid version in \`$VERSION_FILE'" >&2
   elif [ -n "$version" ]; then
     echo "$version"
     exit

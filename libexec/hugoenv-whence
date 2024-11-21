@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+# Summary: List all Hugo versions that contain the given executable
+# Usage: hugoenv whence [--path] <command>
+
+set -e
+[ -n "$HUGOENV_DEBUG" ] && set -x
+
+# Provide hugoenv completions
+if [ "$1" = "--complete" ]; then
+  echo --path
+  exec hugoenv-shims --short
+fi
+
+if [ "$1" = "--path" ]; then
+  print_paths="1"
+  shift
+else
+  print_paths=""
+fi
+
+whence() {
+  local command="$1"
+  hugoenv-versions --bare | while read -r version; do
+    path="$(hugoenv-prefix "$version")/bin/${command}"
+    if [ -x "$path" ]; then
+      [ "$print_paths" ] && echo "$path" || echo "$version"
+    fi
+  done
+}
+
+HUGOENV_COMMAND="$1"
+if [ -z "$HUGOENV_COMMAND" ]; then
+  hugoenv-help --usage whence >&2
+  exit 1
+fi
+
+result="$(whence "$HUGOENV_COMMAND")"
+[ -n "$result" ] && echo "$result"

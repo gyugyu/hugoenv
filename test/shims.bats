@@ -3,26 +3,26 @@
 load test_helper
 
 @test "no shims" {
-  run nodenv-shims
+  run hugoenv-shims
   assert_success
   refute_output
 }
 
 @test "shims" {
-  mkdir -p "${NODENV_ROOT}/shims"
-  touch "${NODENV_ROOT}/shims/node"
-  touch "${NODENV_ROOT}/shims/irb"
-  run nodenv-shims
+  mkdir -p "${HUGOENV_ROOT}/shims"
+  touch "${HUGOENV_ROOT}/shims/node"
+  touch "${HUGOENV_ROOT}/shims/irb"
+  run hugoenv-shims
   assert_success
-  assert_line "${NODENV_ROOT}/shims/node"
-  assert_line "${NODENV_ROOT}/shims/irb"
+  assert_line "${HUGOENV_ROOT}/shims/node"
+  assert_line "${HUGOENV_ROOT}/shims/irb"
 }
 
 @test "shims --short" {
-  mkdir -p "${NODENV_ROOT}/shims"
-  touch "${NODENV_ROOT}/shims/node"
-  touch "${NODENV_ROOT}/shims/irb"
-  run nodenv-shims --short
+  mkdir -p "${HUGOENV_ROOT}/shims"
+  touch "${HUGOENV_ROOT}/shims/node"
+  touch "${HUGOENV_ROOT}/shims/irb"
+  run hugoenv-shims --short
   assert_success
   assert_line "irb"
   assert_line "node"

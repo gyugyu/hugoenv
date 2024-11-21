@@ -1,0 +1,118 @@
+#!/usr/bin/env bash
+#
+# Summary: Set or show the shell-specific Hugo version
+#
+# Usage: hugoenv shell <version>
+#        hugoenv shell -
+#        hugoenv shell --unset
+#
+# Sets a shell-specific Hugo version by setting the `HUGOENV_VERSION'
+# environment variable in your shell. This version overrides local
+# application-specific versions and the global version.
+#
+# <version> should be a string matching a Hugo version known to hugoenv.
+# The special version string `system' will use your default system Hugo.
+# Run `hugoenv versions' for a list of available Hugo versions.
+#
+# When `-` is passed instead of the version string, the previously set
+# version will be restored. With `--unset`, the `HUGOENV_VERSION`
+# environment variable gets unset, restoring the environment to the
+# state before the first `hugoenv shell` call.
+
+set -e
+[ -n "$HUGOENV_DEBUG" ] && set -x
+
+# Provide hugoenv completions
+if [ "$1" = "--complete" ]; then
+  echo --unset
+  echo system
+  exec hugoenv-versions --bare
+fi
+
+version="$1"
+shell="$(basename "${HUGOENV_SHELL:-$SHELL}")"
+
+if [ -z "$version" ]; then
+  if [ -z "$HUGOENV_VERSION" ]; then
+    echo "hugoenv: no shell-specific version configured" >&2
+    exit 1
+  else
+    echo 'echo "$HUGOENV_VERSION"'
+    exit
+  fi
+fi
+
+if [ "$version" = "--unset" ]; then
+  case "$shell" in
+  fish )
+    echo 'set -gu HUGOENV_VERSION_OLD "$HUGOENV_VERSION"'
+    echo "set -e HUGOENV_VERSION"
+    ;;
+  * )
+    echo 'HUGOENV_VERSION_OLD="${HUGOENV_VERSION-}"'
+    echo "unset HUGOENV_VERSION"
+    ;;
+  esac
+  exit
+fi
+
+if [ "$version" = "-" ]; then
+  case "$shell" in
+  fish )
+    cat <<EOS
+if set -q HUGOENV_VERSION_OLD
+  if [ -n "\$HUGOENV_VERSION_OLD" ]
+    set HUGOENV_VERSION_OLD_ "\$HUGOENV_VERSION"
+    set -gx HUGOENV_VERSION "\$HUGOENV_VERSION_OLD"
+    set -gu HUGOENV_VERSION_OLD "\$HUGOENV_VERSION_OLD_"
+    set -e HUGOENV_VERSION_OLD_
+  else
+    set -gu HUGOENV_VERSION_OLD "\$HUGOENV_VERSION"
+    set -e HUGOENV_VERSION
+  end
+else
+  echo "hugoenv: HUGOENV_VERSION_OLD is not set" >&2
+  false
+end
+EOS
+    ;;
+  * )
+    cat <<EOS
+if [ -n "\${HUGOENV_VERSION_OLD+x}" ]; then
+  if [ -n "\$HUGOENV_VERSION_OLD" ]; then
+    HUGOENV_VERSION_OLD_="\$HUGOENV_VERSION"
+    export HUGOENV_VERSION="\$HUGOENV_VERSION_OLD"
+    HUGOENV_VERSION_OLD="\$HUGOENV_VERSION_OLD_"
+    unset HUGOENV_VERSION_OLD_
+  else
+    HUGOENV_VERSION_OLD="\$HUGOENV_VERSION"
+    unset HUGOENV_VERSION
+  fi
+else
+  echo "hugoenv: HUGOENV_VERSION_OLD is not set" >&2
+  false
+fi
+EOS
+    ;;
+  esac
+  exit
+fi
+
+# Make sure the specified version is installed.
+if hugoenv-prefix "$version" >/dev/null; then
+  if [ "$version" != "$HUGOENV_VERSION" ]; then
+    case "$shell" in
+    fish )
+      echo 'set -gu HUGOENV_VERSION_OLD "$HUGOENV_VERSION"'
+      echo "set -gx HUGOENV_VERSION \"$version\""
+      ;;
+    * )
+      echo 'HUGOENV_VERSION_OLD="${HUGOENV_VERSION-}"'
+      echo "export HUGOENV_VERSION=\"$version\""
+      ;;
+    esac
+  fi
+else
+  echo "false"
+  exit 1
+fi

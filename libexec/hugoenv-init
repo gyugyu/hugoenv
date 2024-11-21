@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Summary: Configure the shell environment for nodenv
-# Usage: eval "$(nodenv init - [--no-rehash] [<shell>])"
+# Summary: Configure the shell environment for hugoenv
+# Usage: eval "$(hugoenv init - [--no-rehash] [<shell>])"
 
 set -e
-[ -n "$NODENV_DEBUG" ] && set -x
+[ -n "$HUGOENV_DEBUG" ] && set -x
 
-# Provide nodenv completions
+# Provide hugoenv completions
 if [ "$1" = "--complete" ]; then
   echo -
   echo --no-rehash
@@ -66,15 +66,15 @@ if [ -z "$print" ]; then
     ;;
   esac
 
-  { echo "# Load nodenv automatically by appending"
+  { echo "# Load hugoenv automatically by appending"
     echo "# the following to ${profile}:"
     echo
     case "$shell" in
     fish )
-      echo 'status --is-interactive; and nodenv init - fish | source'
+      echo 'status --is-interactive; and hugoenv init - fish | source'
       ;;
     * )
-      printf 'eval "$(nodenv init - %s)"\n' "$shell"
+      printf 'eval "$(hugoenv init - %s)"\n' "$shell"
       ;;
     esac
     echo
@@ -83,18 +83,18 @@ if [ -z "$print" ]; then
   exit 1
 fi
 
-mkdir -p "${NODENV_ROOT}/"{shims,versions}
+mkdir -p "${HUGOENV_ROOT}/"{shims,versions}
 
 case "$shell" in
 fish )
-  echo "set -gx PATH '${NODENV_ROOT}/shims' \$PATH"
-  echo "set -gx NODENV_SHELL $shell"
+  echo "set -gx PATH '${HUGOENV_ROOT}/shims' \$PATH"
+  echo "set -gx HUGOENV_SHELL $shell"
 ;;
 * )
-  echo 'export PATH="'${NODENV_ROOT}'/shims:${PATH}"'
-  echo "export NODENV_SHELL=$shell"
+  echo 'export PATH="'${HUGOENV_ROOT}'/shims:${PATH}"'
+  echo "export HUGOENV_SHELL=$shell"
 
-  completion="${root}/completions/nodenv.${shell}"
+  completion="${root}/completions/hugoenv.${shell}"
   if [ -r "$completion" ]; then
     echo "source '$completion'"
   fi
@@ -102,35 +102,35 @@ fish )
 esac
 
 if [ -z "$no_rehash" ]; then
-  echo 'command nodenv rehash 2>/dev/null'
+  echo 'command hugoenv rehash 2>/dev/null'
 fi
 
-commands=(`nodenv-commands --sh`)
+commands=(`hugoenv-commands --sh`)
 case "$shell" in
 fish )
   cat <<EOS
-function nodenv
+function hugoenv
   set command \$argv[1]
   set -e argv[1]
 
   switch "\$command"
   case ${commands[*]}
-    nodenv "sh-\$command" \$argv|source
+    hugoenv "sh-\$command" \$argv|source
   case '*'
-    command nodenv "\$command" \$argv
+    command hugoenv "\$command" \$argv
   end
 end
 EOS
   ;;
 ksh )
   cat <<EOS
-function nodenv {
+function hugoenv {
   typeset command
 EOS
   ;;
 * )
   cat <<EOS
-nodenv() {
+hugoenv() {
   local command
 EOS
   ;;
@@ -146,9 +146,9 @@ cat <<EOS
 
   case "\$command" in
   ${commands[*]})
-    eval "\$(nodenv "sh-\$command" "\$@")";;
+    eval "\$(hugoenv "sh-\$command" "\$@")";;
   *)
-    command nodenv "\$command" "\$@";;
+    command hugoenv "\$command" "\$@";;
   esac
 }
 EOS

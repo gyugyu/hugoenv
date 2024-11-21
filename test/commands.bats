@@ -3,7 +3,7 @@
 load test_helper
 
 @test "commands" {
-  run nodenv-commands
+  run hugoenv-commands
   assert_success
   assert_line "init"
   assert_line "rehash"
@@ -13,26 +13,26 @@ load test_helper
 }
 
 @test "commands --sh" {
-  run nodenv-commands --sh
+  run hugoenv-commands --sh
   assert_success
   refute_line "init"
   assert_line "shell"
 }
 
 @test "commands in path with spaces" {
-  path="${NODENV_TEST_DIR}/my commands"
-  cmd="${path}/nodenv-sh-hello"
+  path="${HUGOENV_TEST_DIR}/my commands"
+  cmd="${path}/hugoenv-sh-hello"
   mkdir -p "$path"
   touch "$cmd"
   chmod +x "$cmd"
 
-  PATH="${path}:$PATH" run nodenv-commands --sh
+  PATH="${path}:$PATH" run hugoenv-commands --sh
   assert_success
   assert_line "hello"
 }
 
 @test "commands --no-sh" {
-  run nodenv-commands --no-sh
+  run hugoenv-commands --no-sh
   assert_success
   assert_line "init"
   refute_line "shell"

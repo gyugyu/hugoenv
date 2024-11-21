@@ -1,0 +1,42 @@
+#!/usr/bin/env bash
+# Summary: Display prefix for a Hugo version
+# Usage: hugoenv prefix [<version>]
+#
+# Displays the directory where a Hugo version is installed. If no
+# version is given, `hugoenv prefix' displays the location of the
+# currently selected version.
+
+set -e
+[ -n "$HUGOENV_DEBUG" ] && set -x
+
+# Provide hugoenv completions
+if [ "$1" = "--complete" ]; then
+  echo system
+  exec hugoenv-versions --bare
+fi
+
+if [ -n "$1" ]; then
+  export HUGOENV_VERSION="$1"
+elif [ -z "$HUGOENV_VERSION" ]; then
+  HUGOENV_VERSION="$(hugoenv-version-name)"
+fi
+
+if [ "$HUGOENV_VERSION" = "system" ]; then
+  if HUGO_PATH="$(hugoenv-which hugo)"; then
+    HUGO_PATH="${HUGO_PATH%/*}"
+    HUGOENV_PREFIX_PATH="${HUGO_PATH%/bin}"
+    echo "${HUGOENV_PREFIX_PATH:-/}"
+    exit
+  else
+    echo "hugoenv: system version not found in PATH" >&2
+    exit 1
+  fi
+fi
+
+HUGOENV_PREFIX_PATH="${HUGOENV_ROOT}/versions/${HUGOENV_VERSION}"
+if [ ! -d "$HUGOENV_PREFIX_PATH" ]; then
+  echo "hugoenv: version \`${HUGOENV_VERSION}' not installed" >&2
+  exit 1
+fi
+
+echo "$HUGOENV_PREFIX_PATH"

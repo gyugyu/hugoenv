@@ -1,0 +1,130 @@
+#!/usr/bin/env bash
+set -e
+
+if [ "$1" = "--debug" ]; then
+  export HUGOENV_DEBUG=1
+  shift
+fi
+
+if [ -n "$HUGOENV_DEBUG" ]; then
+  # https://wiki-dev.bash-hackers.org/scripting/debuggingtips#making_xtrace_more_useful
+  export PS4='+(${BASH_SOURCE}:${LINENO}): ${FUNCNAME[0]:+${FUNCNAME[0]}(): }'
+  set -x
+fi
+
+abort() {
+  { if [ "$#" -eq 0 ]; then cat -
+    else echo "hugoenv: $*"
+    fi
+  } >&2
+  exit 1
+}
+
+if enable -f "${BASH_SOURCE%/*}"/../libexec/hugoenv-realpath.dylib realpath 2>/dev/null; then
+  abs_dirname() {
+    local path
+    path="$(realpath "$1")"
+    echo "${path%/*}"
+  }
+else
+  [ -z "$HUGOENV_NATIVE_EXT" ] || abort "failed to load \`realpath' builtin"
+
+  READLINK=$(type -p greadlink readlink 2>/dev/null | head -n1)
+  [ -n "$READLINK" ] || abort "cannot find readlink - are you missing GNU coreutils?"
+
+  resolve_link() {
+    $READLINK "$1"
+  }
+
+  abs_dirname() {
+    local cwd="$PWD"
+    local path="$1"
+
+    while [ -n "$path" ]; do
+      cd "${path%/*}"
+      local name="${path##*/}"
+      path="$(resolve_link "$name" || true)"
+    done
+
+    pwd
+    cd "$cwd"
+  }
+fi
+
+if [ -z "${HUGOENV_ROOT}" ]; then
+  HUGOENV_ROOT="${HOME}/.hugoenv"
+else
+  HUGOENV_ROOT="${HUGOENV_ROOT%/}"
+fi
+export HUGOENV_ROOT
+
+if [ -z "${HUGOENV_DIR}" ]; then
+  HUGOENV_DIR="$PWD"
+else
+  [[ $HUGOENV_DIR == /* ]] || HUGOENV_DIR="$PWD/$HUGOENV_DIR"
+  cd "$HUGOENV_DIR" 2>/dev/null || abort "cannot change working directory to \`$HUGOENV_DIR'"
+  HUGOENV_DIR="$PWD"
+  cd "$OLDPWD"
+fi
+export HUGOENV_DIR
+
+[ -n "$HUGOENV_ORIG_PATH" ] || export HUGOENV_ORIG_PATH="$PATH"
+
+shopt -s nullglob
+
+bin_path="$(abs_dirname "$0")"
+for plugin_bin in "${HUGOENV_ROOT}/plugins/"*/bin; do
+  PATH="${plugin_bin}:${PATH}"
+done
+export PATH="${bin_path}:${PATH}"
+
+HUGOENV_HOOK_PATH="${HUGOENV_HOOK_PATH}:${HUGOENV_ROOT}/hugoenv.d"
+if [ "${bin_path%/*}" != "$HUGOENV_ROOT" ]; then
+  # Add hugoenv's own `hugoenv.d` unless hugoenv was cloned to HUGOENV_ROOT
+  HUGOENV_HOOK_PATH="${HUGOENV_HOOK_PATH}:${bin_path%/*}/hugoenv.d"
+fi
+HUGOENV_HOOK_PATH="${HUGOENV_HOOK_PATH}:/usr/local/etc/hugoenv.d:/etc/hugoenv.d:/usr/lib/hugoenv/hooks"
+for plugin_hook in "${HUGOENV_ROOT}/plugins/"*/etc/hugoenv.d; do
+  HUGOENV_HOOK_PATH="${HUGOENV_HOOK_PATH}:${plugin_hook}"
+done
+HUGOENV_HOOK_PATH="${HUGOENV_HOOK_PATH#:}"
+export HUGOENV_HOOK_PATH
+
+shopt -u nullglob
+
+
+command="$1"
+case "$command" in
+"" )
+  { hugoenv---version
+    hugoenv-help
+  } | abort
+  ;;
+-v | --version )
+  exec hugoenv---version
+  ;;
+-h | --help )
+  exec hugoenv-help
+  ;;
+* )
+  command_path="$(command -v "hugoenv-$command" || true)"
+  if [ -z "$command_path" ]; then
+    if [ "$command" == "shell" ]; then
+      abort "shell integration not enabled. Run \`hugoenv init' for instructions."
+    else
+      abort "no such command \`$command'"
+    fi
+  fi
+
+  shift 1
+  if [ "$1" = --help ]; then
+    if [[ "$command" == "sh-"* ]]; then
+      echo "hugoenv help \"$command\""
+    else
+      exec hugoenv-help "$command"
+    fi
+  else
+    exec "$command_path" "$@"
+  fi
+  ;;
+esac

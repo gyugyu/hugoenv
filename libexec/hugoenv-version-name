@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Summary: Show the current Hugo version
+set -e
+[ -n "$HUGOENV_DEBUG" ] && set -x
+
+if [ -z "$HUGOENV_VERSION" ]; then
+  HUGOENV_VERSION_FILE="$(hugoenv-version-file)"
+  HUGOENV_VERSION="$(hugoenv-version-file-read "$HUGOENV_VERSION_FILE" || true)"
+fi
+
+OLDIFS="$IFS"
+IFS=$'\n' scripts=(`hugoenv-hooks version-name`)
+IFS="$OLDIFS"
+for script in "${scripts[@]}"; do
+  source "$script"
+done
+
+if [ -z "$HUGOENV_VERSION" ] || [ "$HUGOENV_VERSION" = "system" ]; then
+  echo "system"
+  exit
+fi
+
+version_exists() {
+  local version="$1"
+  [ -d "${HUGOENV_ROOT}/versions/${version}" ]
+}
+
+if version_exists "$HUGOENV_VERSION"; then
+  echo "$HUGOENV_VERSION"
+elif version_exists "${HUGOENV_VERSION/v/}"; then
+  echo "${HUGOENV_VERSION/v/}"
+elif version_exists "${HUGOENV_VERSION#hugo-}"; then
+  echo "${HUGOENV_VERSION#hugo-}"
+elif version_exists "${HUGOENV_VERSION#hugo-v}"; then
+  echo "${HUGOENV_VERSION#hugo-v}"
+else
+  echo "hugoenv: version \`$HUGOENV_VERSION' is not installed (set by $(hugoenv-version-origin))" >&2
+  exit 1
+fi

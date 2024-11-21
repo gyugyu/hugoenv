@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+set -e
+[ -n "$HUGOENV_DEBUG" ] && set -x
+
+# Provide hugoenv completions
+if [ "$1" = "--complete" ]; then
+  exec hugoenv-rehash --complete
+fi
+
+shell="$(basename "${HUGOENV_SHELL:-$SHELL}")"
+
+# When hugoenv shell integration is enabled, delegate to hugoenv-rehash,
+# then tell the shell to empty its command lookup cache.
+hugoenv-rehash
+
+case "$shell" in
+fish )
+  # no rehash support
+  ;;
+* )
+  echo "hash -r 2>/dev/null || true"
+  ;;
+esac

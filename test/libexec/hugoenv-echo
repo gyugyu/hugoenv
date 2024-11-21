@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Usage: nodenv echo [-F<char>] VAR
+# Usage: hugoenv echo [-F<char>] VAR
 
 if [[ $1 == -F* ]]; then
   sep="${1:2}"

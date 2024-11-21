@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Usage: hugoenv completions <command> [arg1 arg2...]
+
+set -e
+[ -n "$HUGOENV_DEBUG" ] && set -x
+
+COMMAND="$1"
+if [ -z "$COMMAND" ]; then
+  hugoenv-help --usage completions >&2
+  exit 1
+fi
+
+# Provide hugoenv completions
+if [ "$COMMAND" = "--complete" ]; then
+  exec hugoenv-commands
+fi
+
+COMMAND_PATH="$(command -v "hugoenv-$COMMAND" || command -v "hugoenv-sh-$COMMAND")"
+
+# --help is provided automatically
+echo --help
+
+if grep -iE "^([#%]|--|//) provide hugoenv completions" "$COMMAND_PATH" >/dev/null; then
+  shift
+  exec "$COMMAND_PATH" --complete "$@"
+fi

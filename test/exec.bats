@@ -5,7 +5,7 @@ load test_helper
 create_executable() {
   name="${1?}"
   shift 1
-  bin="${NODENV_ROOT}/versions/${NODENV_VERSION}/bin"
+  bin="${HUGOENV_ROOT}/versions/${HUGOENV_VERSION}/bin"
   mkdir -p "$bin"
   { if [ $# -eq 0 ]; then cat -
     else echo "$@"
@@ -15,28 +15,28 @@ create_executable() {
 }
 
 @test "fails with invalid version" {
-  export NODENV_VERSION="2.0"
-  run nodenv-exec node -v
+  export HUGOENV_VERSION="2.0"
+  run hugoenv-exec node -v
   assert_failure
-  assert_output "nodenv: version \`2.0' is not installed (set by NODENV_VERSION environment variable)"
+  assert_output "hugoenv: version \`2.0' is not installed (set by HUGOENV_VERSION environment variable)"
 }
 
 @test "fails with invalid version set from file" {
-  mkdir -p "$NODENV_TEST_DIR"
-  cd "$NODENV_TEST_DIR"
+  mkdir -p "$HUGOENV_TEST_DIR"
+  cd "$HUGOENV_TEST_DIR"
   echo 1.9 > .node-version
-  run nodenv-exec npm
+  run hugoenv-exec npm
   assert_failure
-  assert_output "nodenv: version \`1.9' is not installed (set by $PWD/.node-version)"
+  assert_output "hugoenv: version \`1.9' is not installed (set by $PWD/.node-version)"
 }
 
 @test "completes with names of executables" {
-  export NODENV_VERSION="2.0"
+  export HUGOENV_VERSION="2.0"
   create_executable "node" "#!/bin/sh"
   create_executable "npm" "#!/bin/sh"
 
-  nodenv-rehash
-  run nodenv-completions exec
+  hugoenv-rehash
+  run hugoenv-completions exec
   assert_success
   assert_output - <<OUT
 --help
@@ -51,14 +51,14 @@ hellos=(\$(printf "hello\\tugly world\\nagain"))
 echo HELLO="\$(printf ":%s" "\${hellos[@]}")"
 SH
 
-  export NODENV_VERSION=system
-  IFS=$' \t\n' run nodenv-exec env
+  export HUGOENV_VERSION=system
+  IFS=$' \t\n' run hugoenv-exec env
   assert_success
   assert_line "HELLO=:hello:ugly:world:again"
 }
 
 @test "forwards all arguments" {
-  export NODENV_VERSION="2.0"
+  export HUGOENV_VERSION="2.0"
   create_executable "node" <<SH
 #!$BASH
 echo \$0
@@ -68,10 +68,10 @@ for arg; do
 done
 SH
 
-  run nodenv-exec node -w "/path to/node script.rb" -- extra args
+  run hugoenv-exec node -w "/path to/node script.rb" -- extra args
   assert_success
   assert_output - <<OUT
-${NODENV_ROOT}/versions/2.0/bin/node
+${HUGOENV_ROOT}/versions/2.0/bin/node
   -w
   /path to/node script.rb
   --
@@ -81,7 +81,7 @@ OUT
 }
 
 @test "supports node -S <cmd>" {
-  export NODENV_VERSION="2.0"
+  export HUGOENV_VERSION="2.0"
 
   # emulate `node -S' behavior
   create_executable "node" <<SH
@@ -96,7 +96,7 @@ if [[ \$1 == "-S"* ]]; then
     exit 1
   fi
 else
-  echo 'node 2.0 (nodenv test)'
+  echo 'node 2.0 (hugoenv test)'
 fi
 SH
 
@@ -105,7 +105,7 @@ SH
 echo hello npm
 SH
 
-  nodenv-rehash
+  hugoenv-rehash
   run node -S npm
   assert_success
   assert_output "hello npm"

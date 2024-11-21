@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Usage: hugoenv version-file-write <file> <version>
+
+set -e
+[ -n "$HUGOENV_DEBUG" ] && set -x
+
+HUGOENV_VERSION_FILE="$1"
+HUGOENV_VERSION="$2"
+
+if [ -z "$HUGOENV_VERSION" ] || [ -z "$HUGOENV_VERSION_FILE" ]; then
+  hugoenv-help --usage version-file-write >&2
+  exit 1
+fi
+
+# Make sure the specified version is installed.
+hugoenv-prefix "$HUGOENV_VERSION" >/dev/null
+
+# Write the version out to disk.
+echo "$HUGOENV_VERSION" > "$HUGOENV_VERSION_FILE"

@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+#
+# Summary: Display the full path to an executable
+#
+# Usage: hugoenv which <command>
+#
+# Displays the full path to the executable that hugoenv will invoke when
+# you run the given command.
+
+set -e
+[ -n "$HUGOENV_DEBUG" ] && set -x
+
+# Provide hugoenv completions
+if [ "$1" = "--complete" ]; then
+  exec hugoenv-shims --short
+fi
+
+remove_from_path() {
+  local path_to_remove="$1"
+  local path_before
+  local result=":${PATH//\~/$HOME}:"
+  while [ "$path_before" != "$result" ]; do
+    path_before="$result"
+    result="${result//:$path_to_remove:/:}"
+  done
+  result="${result%:}"
+  echo "${result#:}"
+}
+
+HUGOENV_COMMAND="$1"
+
+if [ -z "$HUGOENV_COMMAND" ]; then
+  hugoenv-help --usage which >&2
+  exit 1
+fi
+
+HUGOENV_VERSION="${HUGOENV_VERSION:-$(hugoenv-version-name)}"
+
+if [ "$HUGOENV_VERSION" = "system" ]; then
+  PATH="$(remove_from_path "${HUGOENV_ROOT}/shims")" \
+  HUGOENV_COMMAND_PATH="$(command -v "$HUGOENV_COMMAND" || true)"
+else
+  HUGOENV_COMMAND_PATH="${HUGOENV_ROOT}/versions/${HUGOENV_VERSION}/bin/${HUGOENV_COMMAND}"
+fi
+
+OLDIFS="$IFS"
+IFS=$'\n' scripts=(`hugoenv-hooks which`)
+IFS="$OLDIFS"
+for script in "${scripts[@]}"; do
+  source "$script"
+done
+
+if [ -x "$HUGOENV_COMMAND_PATH" ]; then
+  echo "$HUGOENV_COMMAND_PATH"
+elif [ "$HUGOENV_VERSION" != "system" ] && [ ! -d "${HUGOENV_ROOT}/versions/${HUGOENV_VERSION}" ]; then
+  echo "hugoenv: version \`$HUGOENV_VERSION' is not installed (set by $(hugoenv-version-origin))" >&2
+  exit 1
+else
+  echo "hugoenv: $HUGOENV_COMMAND: command not found" >&2
+
+  versions="$(hugoenv-whence "$HUGOENV_COMMAND" || true)"
+  if [ -n "$versions" ]; then
+    { echo
+      echo "The \`$1' command exists in these Hugo versions:"
+      echo "$versions" | sed 's/^/  /g'
+      echo
+    } >&2
+  fi
+
+  exit 127
+fi

@@ -3,35 +3,35 @@
 load test_helper
 
 create_executable() {
-  local bin="${NODENV_ROOT}/versions/${1}/bin"
+  local bin="${HUGOENV_ROOT}/versions/${1}/bin"
   mkdir -p "$bin"
   touch "${bin}/$2"
   chmod +x "${bin}/$2"
 }
 
 @test "empty rehash" {
-  assert [ ! -d "${NODENV_ROOT}/shims" ]
-  run nodenv-rehash
+  assert [ ! -d "${HUGOENV_ROOT}/shims" ]
+  run hugoenv-rehash
   assert_success
   refute_output
-  assert [ -d "${NODENV_ROOT}/shims" ]
-  rmdir "${NODENV_ROOT}/shims"
+  assert [ -d "${HUGOENV_ROOT}/shims" ]
+  rmdir "${HUGOENV_ROOT}/shims"
 }
 
 @test "non-writable shims directory" {
-  mkdir -p "${NODENV_ROOT}/shims"
-  chmod -w "${NODENV_ROOT}/shims"
-  run nodenv-rehash
+  mkdir -p "${HUGOENV_ROOT}/shims"
+  chmod -w "${HUGOENV_ROOT}/shims"
+  run hugoenv-rehash
   assert_failure
-  assert_output "nodenv: cannot rehash: ${NODENV_ROOT}/shims isn't writable"
+  assert_output "hugoenv: cannot rehash: ${HUGOENV_ROOT}/shims isn't writable"
 }
 
 @test "rehash in progress" {
-  mkdir -p "${NODENV_ROOT}/shims"
-  touch "${NODENV_ROOT}/shims/.nodenv-shim"
-  run nodenv-rehash
+  mkdir -p "${HUGOENV_ROOT}/shims"
+  touch "${HUGOENV_ROOT}/shims/.hugoenv-shim"
+  run hugoenv-rehash
   assert_failure
-  assert_output "nodenv: cannot rehash: ${NODENV_ROOT}/shims/.nodenv-shim exists"
+  assert_output "hugoenv: cannot rehash: ${HUGOENV_ROOT}/shims/.hugoenv-shim exists"
 }
 
 @test "creates shims" {
@@ -40,14 +40,14 @@ create_executable() {
   create_executable "0.11.11" "node"
   create_executable "0.11.11" "npm"
 
-  assert [ ! -e "${NODENV_ROOT}/shims/node" ]
-  assert [ ! -e "${NODENV_ROOT}/shims/npm" ]
+  assert [ ! -e "${HUGOENV_ROOT}/shims/node" ]
+  assert [ ! -e "${HUGOENV_ROOT}/shims/npm" ]
 
-  run nodenv-rehash
+  run hugoenv-rehash
   assert_success
   refute_output
 
-  run ls "${NODENV_ROOT}/shims"
+  run ls "${HUGOENV_ROOT}/shims"
   assert_success
   assert_output - <<OUT
 node
@@ -56,52 +56,52 @@ OUT
 }
 
 @test "removes outdated shims" {
-  mkdir -p "${NODENV_ROOT}/shims"
-  touch "${NODENV_ROOT}/shims/oldshim1"
-  chmod +x "${NODENV_ROOT}/shims/oldshim1"
+  mkdir -p "${HUGOENV_ROOT}/shims"
+  touch "${HUGOENV_ROOT}/shims/oldshim1"
+  chmod +x "${HUGOENV_ROOT}/shims/oldshim1"
 
   create_executable "2.0" "npm"
   create_executable "2.0" "node"
 
-  run nodenv-rehash
+  run hugoenv-rehash
   assert_success
   refute_output
 
-  assert [ ! -e "${NODENV_ROOT}/shims/oldshim1" ]
+  assert [ ! -e "${HUGOENV_ROOT}/shims/oldshim1" ]
 }
 
 @test "do exact matches when removing stale shims" {
   create_executable "2.0" "unicorn_rails"
   create_executable "2.0" "rspec-core"
 
-  nodenv-rehash
+  hugoenv-rehash
 
-  cp "$NODENV_ROOT"/shims/{rspec-core,rspec}
-  cp "$NODENV_ROOT"/shims/{rspec-core,rails}
-  cp "$NODENV_ROOT"/shims/{rspec-core,uni}
-  chmod +x "$NODENV_ROOT"/shims/{rspec,rails,uni}
+  cp "$HUGOENV_ROOT"/shims/{rspec-core,rspec}
+  cp "$HUGOENV_ROOT"/shims/{rspec-core,rails}
+  cp "$HUGOENV_ROOT"/shims/{rspec-core,uni}
+  chmod +x "$HUGOENV_ROOT"/shims/{rspec,rails,uni}
 
-  run nodenv-rehash
+  run hugoenv-rehash
   assert_success
   refute_output
 
-  assert [ ! -e "${NODENV_ROOT}/shims/rails" ]
-  assert [ ! -e "${NODENV_ROOT}/shims/rake" ]
-  assert [ ! -e "${NODENV_ROOT}/shims/uni" ]
+  assert [ ! -e "${HUGOENV_ROOT}/shims/rails" ]
+  assert [ ! -e "${HUGOENV_ROOT}/shims/rake" ]
+  assert [ ! -e "${HUGOENV_ROOT}/shims/uni" ]
 }
 
 @test "binary install locations containing spaces" {
   create_executable "dirname1 p247" "node"
   create_executable "dirname2 preview1" "npm"
 
-  assert [ ! -e "${NODENV_ROOT}/shims/node" ]
-  assert [ ! -e "${NODENV_ROOT}/shims/npm" ]
+  assert [ ! -e "${HUGOENV_ROOT}/shims/node" ]
+  assert [ ! -e "${HUGOENV_ROOT}/shims/npm" ]
 
-  run nodenv-rehash
+  run hugoenv-rehash
   assert_success
   refute_output
 
-  run ls "${NODENV_ROOT}/shims"
+  run ls "${HUGOENV_ROOT}/shims"
   assert_success
   assert_output - <<OUT
 node
@@ -116,23 +116,23 @@ echo HELLO="\$(printf ":%s" "\${hellos[@]}")"
 exit
 SH
 
-  IFS=$' \t\n' run nodenv-rehash
+  IFS=$' \t\n' run hugoenv-rehash
   assert_success
   assert_output "HELLO=:hello:ugly:world:again"
 }
 
 @test "sh-rehash in bash" {
   create_executable "2.0" "node"
-  NODENV_SHELL=bash run nodenv-sh-rehash
+  HUGOENV_SHELL=bash run hugoenv-sh-rehash
   assert_success
   assert_output "hash -r 2>/dev/null || true"
-  assert [ -x "${NODENV_ROOT}/shims/node" ]
+  assert [ -x "${HUGOENV_ROOT}/shims/node" ]
 }
 
 @test "sh-rehash in fish" {
   create_executable "2.0" "node"
-  NODENV_SHELL=fish run nodenv-sh-rehash
+  HUGOENV_SHELL=fish run hugoenv-sh-rehash
   assert_success
   refute_output
-  assert [ -x "${NODENV_ROOT}/shims/node" ]
+  assert [ -x "${HUGOENV_ROOT}/shims/node" ]
 }

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Summary: List existing nodenv shims
-# Usage: nodenv shims [--short]
+# Summary: List existing hugoenv shims
+# Usage: hugoenv shims [--short]
 
 set -e
-[ -n "$NODENV_DEBUG" ] && set -x
+[ -n "$HUGOENV_DEBUG" ] && set -x
 
-# Provide nodenv completions
+# Provide hugoenv completions
 if [ "$1" = "--complete" ]; then
   echo --short
   exit
@@ -13,7 +13,7 @@ fi
 
 shopt -s nullglob
 
-for command in "${NODENV_ROOT}/shims/"*; do
+for command in "${HUGOENV_ROOT}/shims/"*; do
   if [ "$1" = "--short" ]; then
     echo "${command##*/}"
   else

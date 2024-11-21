@@ -3,29 +3,29 @@
 load test_helper
 
 create_command() {
-  bin="${NODENV_TEST_DIR}/bin"
+  bin="${HUGOENV_TEST_DIR}/bin"
   mkdir -p "$bin"
   echo "$2" > "${bin}/$1"
   chmod +x "${bin}/$1"
 }
 
 @test "command with no completion support" {
-  create_command "nodenv-hello" "#!$BASH
+  create_command "hugoenv-hello" "#!$BASH
     echo hello"
-  run nodenv-completions hello
+  run hugoenv-completions hello
   assert_success
   assert_output "--help"
 }
 
 @test "command with completion support" {
-  create_command "nodenv-hello" "#!$BASH
-# Provide nodenv completions
+  create_command "hugoenv-hello" "#!$BASH
+# Provide hugoenv completions
 if [[ \$1 = --complete ]]; then
   echo hello
 else
   exit 1
 fi"
-  run nodenv-completions hello
+  run hugoenv-completions hello
   assert_success
   assert_output - <<OUT
 --help
@@ -34,15 +34,15 @@ OUT
 }
 
 @test "forwards extra arguments" {
-  create_command "nodenv-hello" "#!$BASH
-# provide nodenv completions
+  create_command "hugoenv-hello" "#!$BASH
+# provide hugoenv completions
 if [[ \$1 = --complete ]]; then
   shift 1
   for arg; do echo \$arg; done
 else
   exit 1
 fi"
-  run nodenv-completions hello happy world
+  run hugoenv-completions hello happy world
   assert_success
   assert_output - <<OUT
 --help

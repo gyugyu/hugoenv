@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+# Summary: Explain how the current Hugo version is set
+set -e
+[ -n "$HUGOENV_DEBUG" ] && set -x
+
+unset HUGOENV_VERSION_ORIGIN
+
+OLDIFS="$IFS"
+IFS=$'\n' scripts=(`hugoenv-hooks version-origin`)
+IFS="$OLDIFS"
+for script in "${scripts[@]}"; do
+  source "$script"
+done
+
+if [ -n "$HUGOENV_VERSION_ORIGIN" ]; then
+  echo "$HUGOENV_VERSION_ORIGIN"
+elif [ -n "$HUGOENV_VERSION" ]; then
+  echo "HUGOENV_VERSION environment variable"
+else
+  hugoenv-version-file
+fi
